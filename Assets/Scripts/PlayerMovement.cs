@@ -1,6 +1,7 @@
 using UnityEngine.InputSystem;
 using UnityEngine;
-using Unity.VisualScripting;
+using TMPro;
+
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -14,19 +15,25 @@ public class PlayerMovement : MonoBehaviour
     public float bulletSpeed;
     public GameObject bulletPrefab;
     public Transform barrel;
-
+    public AudioSource audioSource;
+    public bool isAlive = true;
 
     void FixedUpdate()
     {
-        HandleMovement();
-        HandleMouseLook();
-        HandleShooting();
+        if (isAlive)
+        {
+            HandleMovement();
+            HandleMouseLook();
+            HandleShooting();
+        }
+
     }
     void HandleShooting()
     {
         shootCoolDown += Time.deltaTime;
-        if (playerInput.actions["fire"].IsPressed() && shootCoolDown > 0.2f)
+        if (playerInput.actions["fire"].IsPressed() && shootCoolDown > 0.5f)
         {
+            audioSource.Play();
             GameObject bullet = (GameObject)Instantiate(bulletPrefab, barrel.position, barrel.transform.rotation);
 
             bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * bulletSpeed;
@@ -57,5 +64,14 @@ public class PlayerMovement : MonoBehaviour
     {
         float horizontal = playerInput.actions["Look"].ReadValue<Vector2>().x;
         gameObject.transform.Rotate(0, horizontal, 0);
+    }
+    private void OnCollisionEnter(Collision other)
+    {
+        if (other.gameObject.CompareTag("zombie"))
+        {
+            GameManager.Instance.gameOverText.gameObject.SetActive(true);
+            isAlive = false;
+        }
+
     }
 }
